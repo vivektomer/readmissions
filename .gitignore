@@ -1,5 +1,5 @@
 venv
 .mypy_cache
-apitest.http
 test.db
 __pycache__
+apitest.http

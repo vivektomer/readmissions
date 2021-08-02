@@ -36,8 +36,10 @@ engine = sqlalchemy.create_engine(DATABASE_URL, pool_size=3, max_overflow=0)
 
 metadata.create_all(engine)
 
+
 class Patient(BaseModel):
-    mrn: int
+    patient_mrn: List[int]
+
 
 class ScoreIn(BaseModel):
     patient_mrn: int
@@ -96,6 +98,10 @@ async def read_scores_by_date(score_date: str):
     query = scores.select().where(scores.c.update_date == score_date)
     return await database.fetch_all(query)
 
-@app.post("/predict", response_model=List[Score], status_code=status.HTTP_200_OK)
-def predict_patients(patients: List[Patient]):
-    return [Score(patient_mrn=p.mrn, risk_score=0.42, update_date="2021-01-01") for p in patients]
+
+@app.post("/predict/", response_model=List[Score], status_code=status.HTTP_201_CREATED)
+async def predict_score(patients: Patient):
+    query = scores.select().where(
+        scores.c.patient_mrn.in_([item for item in patients.patient_mrn])
+    )
+    return await database.fetch_all(query)
